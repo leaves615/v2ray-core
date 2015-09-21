@@ -1,5 +1,5 @@
 {
-  "port": 1080,
+  "port": 9999,
   "inbound": {
     "protocol": "socks",
     "file": "in_socks.json"
