@@ -2,25 +2,32 @@ package main
 
 import (
 	"flag"
-	"io/ioutil"
-	"path"
+	"fmt"
 
 	"github.com/v2ray/v2ray-core"
-	"github.com/v2ray/v2ray-core/log"
+	"github.com/v2ray/v2ray-core/common/log"
+	jsonconf "github.com/v2ray/v2ray-core/config/json"
 
 	// The following are neccesary as they register handlers in their init functions.
-	_ "github.com/v2ray/v2ray-core/net/freedom"
-	_ "github.com/v2ray/v2ray-core/net/socks"
-	_ "github.com/v2ray/v2ray-core/net/vmess"
+	_ "github.com/v2ray/v2ray-core/proxy/freedom"
+	_ "github.com/v2ray/v2ray-core/proxy/socks"
+	_ "github.com/v2ray/v2ray-core/proxy/vmess"
 )
 
 var (
 	configFile = flag.String("config", "", "Config file for this Point server.")
 	logLevel   = flag.String("loglevel", "", "Level of log info to be printed to console, available value: debug, info, warning, error")
+	version    = flag.Bool("version", false, "Show current version of V2Ray.")
 )
 
 func main() {
 	flag.Parse()
+
+	if *version {
+		fmt.Printf("V2Ray version %s (%s): %s", core.Version, core.Codename, core.Intro)
+		fmt.Println()
+		return
+	}
 
 	switch *logLevel {
 	case "debug":
@@ -36,24 +43,12 @@ func main() {
 	if configFile == nil || len(*configFile) == 0 {
 		panic(log.Error("Config file is not set."))
 	}
-	rawVConfig, err := ioutil.ReadFile(*configFile)
+	config, err := jsonconf.LoadConfig(*configFile)
 	if err != nil {
 		panic(log.Error("Failed to read config file (%s): %v", *configFile, err))
 	}
-	vconfig, err := core.LoadConfig(rawVConfig)
-	if err != nil {
-		panic(log.Error("Failed to parse Config: %v", err))
-	}
 
-	if !path.IsAbs(vconfig.InboundConfig.File) && len(vconfig.InboundConfig.File) > 0 {
-		vconfig.InboundConfig.File = path.Join(path.Dir(*configFile), vconfig.InboundConfig.File)
-	}
-
-	if !path.IsAbs(vconfig.OutboundConfig.File) && len(vconfig.OutboundConfig.File) > 0 {
-		vconfig.OutboundConfig.File = path.Join(path.Dir(*configFile), vconfig.OutboundConfig.File)
-	}
-
-	vPoint, err := core.NewPoint(vconfig)
+	vPoint, err := core.NewPoint(config)
 	if err != nil {
 		panic(log.Error("Failed to create Point server: %v", err))
 	}

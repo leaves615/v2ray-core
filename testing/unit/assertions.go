@@ -16,6 +16,10 @@ func Assert(t *testing.T) *Assertion {
 	return assert
 }
 
+func (a *Assertion) Int64(value int64) *Int64Subject {
+	return NewInt64Subject(NewSubject(a), value)
+}
+
 func (a *Assertion) Int(value int) *IntSubject {
 	return NewIntSubject(NewSubject(a), value)
 }
@@ -38,4 +42,12 @@ func (a *Assertion) String(value string) *StringSubject {
 
 func (a *Assertion) Error(value error) *ErrorSubject {
 	return NewErrorSubject(NewSubject(a), value)
+}
+
+func (a *Assertion) Bool(value bool) *BoolSubject {
+	return NewBoolSubject(NewSubject(a), value)
+}
+
+func (a *Assertion) Pointer(value interface{}) *PointerSubject {
+	return NewPointerSubject(NewSubject(a), value)
 }

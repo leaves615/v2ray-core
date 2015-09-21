@@ -13,11 +13,82 @@
         <div class="container">
             <div class="col-sm-offset-3">
                 <ul class="nav navbar-nav">
-                    <li><a href="#">配置</a></li>
-                    <li><a href="#">管理</a></li>
+                    <li><a href="#" id="nav-config">配置</a></li>
+                    <li><a href="#">规则管理</a></li>
                 </ul>
             </div>
         </div>
     </nav>
+    <div class="container" style="margin-top: 60px;">
+        <div class="row hide" id="config">
+            <div class="col-sm-8 col-sm-offset-2">
+                <form class="form-horizontal" id="config-form">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="local-port">本地端口：</label>
+                        <div class="col-sm-5">
+                            <input type="number" name="localPort" id="local-port" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="server">服务器地址：</label>
+                        <div class="col-sm-5">
+                            <input name="server" id="server" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="server-port">服务器端口：</label>
+                        <div class="col-sm-5">
+                            <input type="number" name="serverPort" id="server-port" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-sm-2" for="user-id">用户 ID：</label>
+                        <div class="col-sm-5">
+                            <input name="userId" id="user-id" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="btn-group col-sm-offset-2 col-sm-5">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script type="application/javascript">
+        $(document).ready(function () {
+            $("#nav-config").click(function () {
+                $(".container .row").removeClass("show").addClass("hide");
+                var count = 0;
+                var show = function () {
+                    if(count ==0 ) {
+                        $("#config").removeClass("hide").addClass("show");
+                    }
+                }
+                count++;
+                $.get("/config/vpoint_socks_vmess.json", function (data) {
+                    if(data) {
+                        $("#config").data("vpoint_socks_vmess", data);
+                        $("#local-port").val(data.port);
+                        count--;
+                        show();
+                    }
+                },"json");
+                count++;
+                $.get("/config/out_vmess.json", function (data) {
+                    if (data) {
+                        $("#config").data("out_vmess", data);
+                        $("#server").val(data.vnext[0].address);
+                        $("#server-port").val(data.vnext[0].port);
+                        $("#user-id").val(data.vnext[0].users[0].id);
+                        count--;
+                        show();
+                    }
+                }, "json");
+            });
+            $("#nav-config").click();
+        })
+    </script>
 </body>
 </html>

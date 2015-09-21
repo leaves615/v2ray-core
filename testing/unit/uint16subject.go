@@ -10,10 +10,10 @@ type Uint16Subject struct {
 }
 
 func NewUint16Subject(base *Subject, value uint16) *Uint16Subject {
-	subject := new(Uint16Subject)
-	subject.Subject = base
-	subject.value = value
-	return subject
+	return &Uint16Subject{
+		Subject: base,
+		value:   value,
+	}
 }
 
 func (subject *Uint16Subject) Named(name string) *Uint16Subject {
@@ -44,5 +44,11 @@ func (subject *Uint16Subject) GreaterThan(expectation uint16) {
 func (subject *Uint16Subject) LessThan(expectation uint16) {
 	if subject.value >= expectation {
 		subject.Fail("is less than", expectation)
+	}
+}
+
+func (subject *Uint16Subject) Positive() {
+	if subject.value <= 0 {
+		subject.FailWithMessage("Not true that " + subject.DisplayString() + " is positive.")
 	}
 }

@@ -1,25 +1,40 @@
 #!/bin/bash
 
-echo "mode: set" > coverall.out
-fail=0
+FAIL=0
 
-for dir in $(find . -maxdepth 10 -not -path './.git*' -type d);
-do
-  if ls $dir/*.go &> /dev/null; then
-    go test -coverprofile=coversingle.out $dir || fail=1
-    if [ -f coversingle.out ]
-    then
-      cat coversingle.out | grep -v "mode: set" >> coverall.out
-      rm coversingle.out
-    fi
+function join { local IFS="$1"; shift; echo "$*"; }
+
+function test_package {
+  DIR="github.com/v2ray/v2ray-core/$1"
+  DEP=$2
+  IFS=',' read -ra DEPS <<< "$DEP"
+  DEPS=("${DEPS[@]/#/github.com/v2ray/v2ray-core/}")
+  DEP=$(join , "${DEPS[@]}")
+  go test -coverprofile=coversingle.out -coverpkg=$DEP $DIR || FAIL=1
+  if [ -f coversingle.out ]; then
+    cat coversingle.out | grep -v "mode: set" >> coverall.out
+    rm coversingle.out
   fi
-done
+}
 
-if [ "$fail" -eq 0 ]
-then
+touch coverall.out
+
+test_package "common/net" "common/net"
+test_package "config/json" "config/json"
+test_package "proxy/socks" "proxy/socks,proxy/socks/protocol"
+test_package "proxy/socks/protocol" "proxy/socks/protocol"
+test_package "proxy/vmess" "common/io,common/net,proxy/vmess,proxy/vmess/protocol,proxy/vmess/protocol/user"
+test_package "proxy/vmess/protocol" "proxy/vmess/protocol,proxy/vmess/protocol/user"
+test_package "proxy/vmess/protocol/user" "proxy/vmess/protocol/user"
+
+cat coverall.out | sort -t: -k1 > coverallsorted.out
+echo "mode: set" | cat - coverallsorted.out > coverall.out
+rm coverallsorted.out
+
+if [ "$FAIL" -eq 0 ]; then
   $HOME/gopath/bin/goveralls -v -coverprofile=coverall.out -service=travis-ci -repotoken $COVERALLS_TOKEN
 fi
 
 rm -f coverall.out
 
-exit $fail
+exit $FAIL

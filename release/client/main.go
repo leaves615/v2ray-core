@@ -28,8 +28,9 @@ func pacServer() {
 	router.HandleFunc("/", indexHandler)
 	router.HandleFunc("/config/{fileName}", getConfig).Methods("GET")
 	//	http.Handle("/pac", pacHandler)
-	router.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))))
-	http.ListenAndServe(":10086", router)
+	http.Handle("/", router)
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))))
+	http.ListenAndServe(":10086", nil)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
